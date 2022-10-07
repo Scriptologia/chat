@@ -1,0 +1,27 @@
+{
+  "name": "scriptologia/chat",
+  "description": "Chat on websocket.",
+  "minimum-stability": "stable",
+  "license": "MIT",
+  "autor": [
+    {
+      "name": "Alex",
+      "email": "alexsuvorov1005@gmail.com"
+    },
+  ],
+  "require": {
+    "php": "^8.0",
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Scriptologia\\Chat\\Providers\\ChatServiceProvider"
+      ]
+    }
+  },
+  "autoload": {
+    "psr-4": {
+      "Scriptologia\\Chat\\" : "src",
+    }
+  },
+}
