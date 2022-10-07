@@ -3,10 +3,11 @@
   "description": "Chat on websocket.",
   "minimum-stability": "stable",
   "license": "MIT",
-  "autor": [
+  "authors": [
     {
-      "name": "Alex"
-    },
+      "name": "Alex",
+      "email": "alexsuvorov1005@gmail.com"
+    }
   ],
   "require": {
     "php": "^8.0",
