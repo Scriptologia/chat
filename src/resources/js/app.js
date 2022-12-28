@@ -20,14 +20,35 @@ window.Vue = require('vue').default;
 // files.keys().map(key => Vue.component(key.split('/').pop().split('.')[0], files(key).default))
 
 Vue.component('chat', require('./components/Chat.vue').default);
-Vue.component('private-chat', require('./components/PrivateChat.vue').default);
 
 /**
  * Next, we will create a fresh Vue application instance and attach it to
  * the page. Then, you may begin adding components to this application
  * or customize the JavaScript scaffolding to fit your unique needs.
  */
+Vue.directive('click-outside', {
+    bind(el, binding) {
+        el.addEventListener('click', e => e.stopPropagation());
+        document.body.addEventListener('click', binding.value);
+    },
+    unbind(el, binding) {
+        document.body.removeEventListener('click', binding.value);
+    }
+});
 
+// Vue.directive('click-outside', {
+//     bind: function (el, binding, vnode) {
+//         this.event = function (event) {
+//             if (!(el == event.target || el.contains(event.target))) {
+//                 vnode.context[binding.expression](event);
+//             }
+//         };
+//         document.body.addEventListener('click', this.event)
+//     },
+//     unbind: function (el) {
+//         document.body.removeEventListener('click', this.event)
+//     },
+// });
 const app = new Vue({
     el: '#app',
 });

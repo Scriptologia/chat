@@ -23,5 +23,9 @@
     "psr-4": {
       "Scriptologia\\Chat\\" : "src"
     }
+  },
+  "require": {
+    "beyondcode/laravel-websockets": "^1.13",
+    "laravel/sanctum": "^3.0"
   }
 }

@@ -13,6 +13,14 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::group(['namespace' => 'Scriptologia\Chat\Http'], function () {
-    Route::get('/chat', 'Controllers\ChatController@index');
+Route::group(['middleware' => ['web', 'auth'], 'namespace' => 'Scriptologia\Chat\Http\Controllers'], function () {
+    Route::get('/chat', 'ChatController@index')->name('chat');
+    Route::get('/api/chat/get-me', 'ChatController@getMe');
+    Route::get('/api/chat/contacts', 'ChatController@contacts');
+    Route::get('/api/chat/all-users', 'ChatController@allUsers');
+    Route::post('/api/chat/search', 'ChatController@search');
+    Route::post('/api/chat/send-message', 'ChatController@sendMessage');
+    Route::post('/api/chat/read-message', 'ChatController@readMessage');
+    Route::post('/api/chat/trash', 'ChatController@trashMessage');
+    Route::post('/api/chat/delete-chat', 'ChatController@deleteChat');
 });
