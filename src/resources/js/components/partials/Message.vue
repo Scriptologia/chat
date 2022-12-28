@@ -45,7 +45,7 @@
             trash () {
                 let data  =  { chat_id: this.chatId, message: this.currentOptions}
                 this.currentOptions = false
-                axios.post('/api/chat/trash', data)
+                axios.post('/api/chat/trash-message', data)
                     .then(function (response) {
                     })
                     .catch(function (error) {
