@@ -1,7 +1,7 @@
 <template>
     <div class="chat">
     <div class="chat-message" ref="feed" :key="user.id">
-        <template v-if="messages && messages.length && typeof(messages) != 'undefided' ">
+        <template v-if="messages && messages.length && typeof(messages) !== 'undefided' ">
             <template v-for="(message, index) in messages">
             <div class="chat-message_item"
                  :key="index"

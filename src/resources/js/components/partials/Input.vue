@@ -33,9 +33,8 @@
             closeAlert(){
                 this.alert = false;
             },
-            typing (){
-                this.channel
-                        .whisper('typing' , this.me)
+            typing (){console.log(this.channel)
+                if (this.channel ) this.channel.whisper('typing' , this.me) ;
             },
             sendMessage () {
                 if(this.ignored) {
@@ -57,7 +56,7 @@
         },
         computed: {
             channel(){
-                if(this.user) { return window.Echo.join('chat.to-user-'+ this.user.id) }
+                if(this.user && !this.ignored) { return window.Echo.join('chat.to-user-'+ this.user.id) }
             }
     },
         mounted () {

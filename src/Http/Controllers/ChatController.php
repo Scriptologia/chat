@@ -133,7 +133,7 @@ class ChatController extends Controller
             if($messages){
                $makeReaded =  function ($it) use($me_id)
                 {
-                    if ( $it->from === $me_id) $it->status = 'readed';
+                    if ( $it->to === $me_id) $it->status = 'readed';
                     return $it;
                 };
                 $messages_readed = array_map($makeReaded, $messages->messages);

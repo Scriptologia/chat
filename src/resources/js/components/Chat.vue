@@ -59,7 +59,7 @@
                 this.user = null
             },
             isJoin(){
-                window.Echo.join('chat.to-user-'+ this.user.id )
+               if(!this.ignored) window.Echo.join('chat.to-user-'+ this.user.id )
             },
             getTyping (typing) {
                 this.isTyping = typing
@@ -147,6 +147,8 @@
                             })
                         })
                         .listen('.Scriptologia\\Chat\\Events\\SendMessageEvent', (data) => {
+                            if( data.user.id !== self.me.id )  self.deliveredMessage(data);
+
                             let index ;
                             if(data.user.id === self.me.id) {
                                 index = self.myUsers.findIndex( it => {
@@ -166,14 +168,13 @@
                                     item.id = data.chat_id
 
                                     if( data.user.id !== self.me.id && ( !self.user || self.user.id !== data.user.id ) ) { item.countNew ? item.countNew++ : item.countNew = 1; }
-                                    if (data.user.id !== self.me.id && self.user.id === data.user.id) { self.readedSend();}
+                                    if (data.user.id !== self.me.id && self.user.id === data.user.id) self.readedSend();
                                 }
                                 else {
                                     let newObj = { user: data.user, messages : [data.message], id: data.chat_id, active: false, countNew: 1}
                                     self.myUsers.unshift( newObj )
                                 }
 
-                            if( data.user.id !== self.me.id )  self.deliveredMessage(data);
                             self.clear()
                         })
                         .listen('.Scriptologia\\Chat\\Events\\TrashedMessageEvent', (data) => {
