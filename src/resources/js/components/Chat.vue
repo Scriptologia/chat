@@ -108,7 +108,7 @@
                 this.isJoin()
                 if(user.id && !user.ignored) this.readedSend() ;
             },
-            deliveredMessage (data) {console.log('axios', data)
+            deliveredMessage (data) {
                 axios.post('/api/chat/delivered-message', data)
                     .then(function (response) {
                         // TODO
@@ -180,7 +180,7 @@
                             self.myUsers = self.myUsers.map( it => {
                                 if(it.id === data.chat_id )  {
                                     it.messages = it.messages.map( item => {
-                                        if( item.from === data.trashedMessage.from && item.date === data.trashedMessage.date) {item = data.trashedMessage ; console.log('1')}
+                                        if( item.from === data.trashedMessage.from && item.date === data.trashedMessage.date) item = data.trashedMessage ;
                                         return item;
                                     });
                                     if(self.chatId === data.chat_id) {self.messages = it.messages ; self.chatId = data.chat_id ;}
@@ -226,7 +226,7 @@
                                 return it;
                             })
                         })
-                        .listen('.Scriptologia\\Chat\\Events\\IsIgnoredEvent', ({data}) => {console.log('event',data)
+                        .listen('.Scriptologia\\Chat\\Events\\IsIgnoredEvent', ({data}) => {
                             if (data.status) window.Echo.leave('chat.to-user-'+data.user_id );
                             if (!data.status) window.Echo.join('chat.to-user-'+data.user_id );
                         }) ;
