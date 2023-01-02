@@ -25,6 +25,7 @@ class ChatServiceProvider extends ServiceProvider
     {
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
         $this->loadRoutesFrom(__DIR__.'/../routes/api.php');
+        $this->loadRoutesFrom(__DIR__.'/../routes/channels.php');
 
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'chat');
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');

@@ -6,7 +6,7 @@
             <img :src="user.hasOwnProperty('img') ? user.img : defautImg" alt="">
         </div>
         <div class="chat-info_text">
-            <p class="chat-info_text_name">{{user.name}}</p>
+            <p class="chat-info_text_name">{{user.name}} <span v-if="ignored ">заблокирован</span></p>
             <p class="chat-info_text_info"><span v-if="isTyping && isTyping.id === user.id" class="">пишет...</span></p>
         </div>
             <div class="menu-user">
@@ -14,7 +14,8 @@
                 <div class="menu-user_block" :style="[ menu? {'display':'block'} : {'display':'none'}]"  v-click-outside="closeMenu">
                     <ul class="menu-user_list">
                         <li class="menu-user_item" @click="deleteChat"><i class="menu-user_item_icon icon-delete icon"></i><p class="menu-user_item_text">удалить канал</p></li>
-                        <li class="menu-user_item"><i class="menu-user_item_icon icon-delete icon"></i><p class="menu-user_item_text">удалить канал</p></li>
+                        <li class="menu-user_item" @click="ignoreUser" v-if="!ignored"><i class="menu-user_item_icon icon-ignore icon"></i><p class="menu-user_item_text">игнорировать</p></li>
+                        <li class="menu-user_item" @click="unIgnore" v-else><i class="menu-user_item_icon icon-ignore icon"></i><p class="menu-user_item_text">разблокировать</p></li>
                         <li class="menu-user_item"><i class="menu-user_item_icon icon-delete icon"></i><p class="menu-user_item_text">удалить канал</p></li>
                     </ul>
                 </div>
@@ -27,7 +28,7 @@
     export default {
         name: "Info",
         props: [
-            'user', 'isTyping', 'chatId'
+            'user', 'isTyping', 'chatId', 'ignored'
         ],
         data() {
             return {
@@ -42,6 +43,32 @@
                     .then(function (response) {
                         if(response.data.status) {
                             self.$emit('deleteChat', response.data.deletedChat)
+                            self.menu = false
+                        }
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    })
+            },
+            ignoreUser () {
+                let self = this;
+                axios.post('/api/chat/ignore-user', {ignore_user_id: self.user.id})
+                    .then(function (response) {
+                        if(response.data.status && self.user.id === response.data.ignore_user_id ) {
+                            self.$emit('ignored', {user_id: response.data.ignore_user_id, ignored: true})
+                            self.menu = false
+                        }
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    })
+            },
+            unIgnore () {
+                let self = this;
+                axios.post('/api/chat/unignore-user', {unignore_user_id: self.user.id})
+                    .then(function (response) {
+                        if(response.data.status && self.user.id === response.data.unignore_user_id ) {
+                            self.$emit('ignored', {user_id: response.data.unignore_user_id, ignored: false})
                             self.menu = false
                         }
                     })
@@ -104,6 +131,11 @@
                         text-overflow: ellipsis;
                         overflow: hidden;
                         color: #767778;
+                        & > span {
+                            font-size: .7em;
+                            font-style: italic;
+                            color: red;
+                        }
                     }
                     &_info {
                         font-size: 16px;
@@ -169,6 +201,16 @@
                 background-color: #2196f3;
                 &-delete {
                     -webkit-mask: url('../../../img/delete.svg');
+                    -webkit-mask-size: contain;
+                    mask-size: contain;
+                    -webkit-mask-repeat: no-repeat;
+                    mask-repeat: no-repeat;
+                    -webkit-mask-position: center;
+                    mask-position: center;
+                    background-color: red;
+                }
+                &-ignore {
+                    -webkit-mask: url('../../../img/ignore.svg');
                     -webkit-mask-size: contain;
                     mask-size: contain;
                     -webkit-mask-repeat: no-repeat;

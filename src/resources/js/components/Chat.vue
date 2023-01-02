@@ -5,9 +5,9 @@
             <ContactsList :users="users" @selectedUser="toMessage" :userActive="user" :isTyping="isTyping"  ></ContactsList>
         </div>
         <div class="chat-right" :class="{ open: toMessageShow }">
-            <Info :user="user" @toUserList="toMessageShow = false" :isTyping="isTyping" v-if="user" :key=" 'user' + user.id" :chatId="chatId" @deleteChat="deleteChat"></Info>
-            <Message v-if="user" :messages="messages" :me="me" :user="user" :key=" 'messages' + chatId" :chatId="chatId"></Message>
-            <Input v-if="user" :me="me" :user="user" @typing="getTyping" :chatId="chatId" :key=" 'input' + chatId"></Input>
+            <Info :user="user" @toUserList="toMessageShow = false" :isTyping="isTyping" v-if="user" :key=" 'user' + user.id" :chatId="chatId" @deleteChat="deleteChat" :ignored="ignored" @ignored="ignoredStatus" ref="info"></Info>
+            <Message v-if="user" :messages="messages" :me="me" :user="user" :key=" 'messages' + chatId" :chatId="chatId" :ignored="ignored"></Message>
+            <Input v-if="user" :me="me" :user="user" @typing="getTyping" :chatId="chatId" :key=" 'input' + chatId" :ignored="ignored" @unignore="$refs.info.unIgnore()"></Input>
         </div>
     </div>
 </template>
@@ -32,10 +32,20 @@
                 me: null,
                 toMessageShow : false,
                 isTyping: false,
-                searchClear: ''
+                searchClear: '',
+                ignored : false
             }
         },
         methods: {
+            ignoredStatus (obj) {
+                this.ignored = obj.ignored
+                let us =this.myUsers.find( it => {
+                   return  it.user.id === obj.user_id
+                })
+                us.ignored = obj.ignored;
+                if(!us.ignored) { this.readedSend() ; this.isJoin();}
+                else { window.Echo.leave('chat.to-user-'+us.user.id );}
+            },
             deleteChat (deletedChat ) {
                 let index = this.myUsers.findIndex( it => {
                     return it.id === deletedChat.id;
@@ -62,7 +72,7 @@
                     let messages = this.myUsers.find(item => {
                         if ( item.user.id === it.id ) { return item.messages }
                     })
-                    return { id: false, countNew: 0, active: false, user: it, messages: messages ? messages: []}
+                    return { id: false, countNew: 0, active: false, user: it, messages: messages ? messages: [], ignored: it.ignored}
                 })
             },
             readedSend(){
@@ -82,6 +92,7 @@
 
                 this.messages = user.messages ? user.messages : [];
                 this.chatId = user.id
+                this.ignored = user.ignored
                 if(!this.user || this.user.id !== user.user) {
                     this.user = user.user
                     this.toMessageShow = true
@@ -95,10 +106,18 @@
 
                 this.clear()
                 this.isJoin()
-                if(user.id) this.readedSend() ;
+                if(user.id && !user.ignored) this.readedSend() ;
             },
+            deliveredMessage (data) {console.log('axios', data)
+                axios.post('/api/chat/delivered-message', data)
+                    .then(function (response) {
+                        // TODO
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    })
+            }
         },
-        computed: {},
         mounted (){
             let self = this
 
@@ -154,6 +173,7 @@
                                     self.myUsers.unshift( newObj )
                                 }
 
+                            if( data.user.id !== self.me.id )  self.deliveredMessage(data);
                             self.clear()
                         })
                         .listen('.Scriptologia\\Chat\\Events\\TrashedMessageEvent', (data) => {
@@ -186,13 +206,29 @@
                             self.myUsers = self.myUsers.map( it => {
                                 if(it.user.id === data.readed_user_id )  {
                                     it.messages = it.messages.map( item => {
-                                        if( item.to === data.readed_user_id) item.readed = true;
+                                        if( item.to === data.readed_user_id) item.status = 'readed';
                                         return item;
                                     });
                                     if(self.user && data.readed_user_id === self.user.id) {self.messages = it.messages ; self.chatId = data.chat_id ;}
                                 }
                                 return it;
                             })
+                        })
+                        .listen('.Scriptologia\\Chat\\Events\\DeliveredMessageEvent', ({data}) => {
+                            self.myUsers = self.myUsers.map( it => {
+                                if(it.id === data.chat_id )  {
+                                    it.messages = it.messages.map( item => {
+                                        if( item.from === data.from && data.date === item.date) item.status = 'delivered';
+                                        return item;
+                                    });
+                                    if(self.user && data.from === self.user.id) {self.messages = it.messages ; self.chatId = data.chat_id ;}
+                                }
+                                return it;
+                            })
+                        })
+                        .listen('.Scriptologia\\Chat\\Events\\IsIgnoredEvent', ({data}) => {console.log('event',data)
+                            if (data.status) window.Echo.leave('chat.to-user-'+data.user_id );
+                            if (!data.status) window.Echo.join('chat.to-user-'+data.user_id );
                         }) ;
                 })
                 .catch(function (error) {
@@ -204,7 +240,7 @@
                     self.users = response.data.map( it => {
                         let sum = 0
                         for (let i = 0; i < it.length ; i++) {
-                            if(it.from !== self.me.id && !id.readed) sum++;
+                            if(it.from !== self.me.id && !id.status === 'readed') sum++;
                         }
                         it.countNew = sum
                         return it;

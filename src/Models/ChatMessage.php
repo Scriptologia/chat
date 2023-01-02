@@ -10,10 +10,11 @@ class ChatMessage extends Model
 {
     use HasFactory, Searchable;
 
-    protected $guarded = ['user1', 'user2', 'messages'];
+    protected $fillable = ['user1_id', 'user2_id', 'messages'];
+
     protected $casts = [
-        'user1' =>'integer',
-        'user2' =>'integer',
+        'user1_id' =>'integer',
+        'user2_id' =>'integer',
         'messages' => 'object'
     ];
 

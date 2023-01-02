@@ -23,4 +23,7 @@ Route::group(['middleware' => ['web', 'auth'], 'namespace' => 'Scriptologia\Chat
     Route::post('/api/chat/read-message', 'ChatController@readMessage');
     Route::post('/api/chat/trash-message', 'ChatController@trashMessage');
     Route::post('/api/chat/delete-chat', 'ChatController@deleteChat');
+    Route::post('/api/chat/ignore-user', 'ChatController@ignoreUser');
+    Route::post('/api/chat/unignore-user', 'ChatController@unIgnoreUser');
+    Route::post('/api/chat/delivered-message', 'ChatController@deliveredMessage');
 });

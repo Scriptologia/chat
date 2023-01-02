@@ -36,10 +36,11 @@ class SendMessageEvent implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return [
-            new PresenceChannel('chat.to-user-'. $this->data['message']['to']),
-            new PresenceChannel('chat.to-user-'. $this->data['message']['from'])
-        ];
+        if( !\Scriptologia\Chat\Models\ChatIgnore::where('user_id', $this->data['message']['to'])->where('ignore_user_id', $this->data['message']['from'])->first() && !\Scriptologia\Chat\Models\ChatIgnore::where('user_id', $this->data['message']['from'])->where('ignore_user_id', $this->data['message']['to'])->first() )
+            $data[] = new PresenceChannel('chat.to-user-'. $this->data['message']['to']) ;
+        $data[] = new PresenceChannel('chat.to-user-'. $this->data['message']['from']) ;
+
+        return $data;
     }
 
     public function broadcastWith()

@@ -4,11 +4,15 @@ namespace Scriptologia\Chat\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Scriptologia\Chat\Events\DeliveredMessageEvent;
+use Scriptologia\Chat\Events\IsIgnoredEvent;
 use Scriptologia\Chat\Events\SendMessageEvent;
 use Scriptologia\Chat\Events\DeletedMessageEvent;
 use Scriptologia\Chat\Events\ReadedMessageEvent;
 use Scriptologia\Chat\Events\TrashedMessageEvent;
 use Scriptologia\Chat\Http\Resources\ChatCollection;
+use Scriptologia\Chat\Http\Resources\UserCollection;
+use Scriptologia\Chat\Models\ChatIgnore;
 use Scriptologia\Chat\Models\ChatMessage;
 use Illuminate\Http\Request;
 
@@ -70,7 +74,8 @@ class ChatController extends Controller
             $me = auth()->user();
             $users = User::search($request)->where('id', '!=', $me->id)->get();
 
-            return response()->json($users);
+            $collection = UserCollection::collection($users);
+            return response()->json($collection);
         }
     }
 
@@ -88,7 +93,7 @@ class ChatController extends Controller
                 'from' => $me['id'],
                 'to' => $user['id'],
                 'date' => now(),
-                "readed"=> false,
+                "status"=> 'sended',
                 "trashed"=> false
             ];
 
@@ -128,7 +133,7 @@ class ChatController extends Controller
             if($messages){
                $makeReaded =  function ($it) use($me_id)
                 {
-                    if ( $it->from === $me_id) $it->readed = true;
+                    if ( $it->from === $me_id) $it->status = 'readed';
                     return $it;
                 };
                 $messages_readed = array_map($makeReaded, $messages->messages);
@@ -139,6 +144,37 @@ class ChatController extends Controller
 
             $user_id = $messages->user1_id === $me_id ? $messages->user2_id : $messages->user1_id ;
             broadcast( new ReadedMessageEvent(['chat_id' => $chat_id, 'to' => $user_id, 'readed_user_id' => $me_id ]) );
+        }
+    }
+    /**
+     * @param Request $request
+     */
+    public function deliveredMessage(Request $request)
+    {
+        if($request->ajax()) {
+            $me_id = Auth::user()->id;
+            $chat_id = $request->chat_id;
+            $user = $request->user;
+            $message = $request->message;
+
+            $messages = ChatMessage::where('id', $chat_id)->where(function ($query) use($me_id) {
+                $query->where('user1_id', $me_id)->orWhere('user2_id', $me_id);
+            })->first();
+
+            if($messages){
+               $makeReaded =  function ($it) use($me_id, $message, $user)
+                {
+                    if ( $it->from === $user['id'] && $it->date === $message['date']) $it->status = 'delivered';
+                    return $it;
+                };
+                $messages_delivered = array_map($makeReaded, $messages->messages);
+
+                $messages->messages = $messages_delivered;
+                $messages->save();
+            }
+
+//            $user_id = $messages->user1_id === $me_id ? $messages->user2_id : $messages->user1_id ;
+            broadcast( new DeliveredMessageEvent(['chat_id' => $chat_id, 'from' => $user['id'], 'date' => $message['date'] ]) );
         }
     }
 
@@ -181,6 +217,34 @@ class ChatController extends Controller
                 broadcast( new DeletedMessageEvent($chatDeleted) );
                 return response()->json(['status' => true , 'deletedChat' => $chat, 'user_id' => $user_id ], 200);
             }
+        }
+    }
+    /**
+     * @param Request $request
+     */
+    public function ignoreUser (Request $request)
+    {
+        if($request->ajax()) {
+            $ignore_user_id = $request->ignore_user_id;
+            $user_id = Auth::user()->id;
+            $ignore = ChatIgnore::create([ 'user_id' =>  $user_id, 'ignore_user_id' => $ignore_user_id ]);
+            if($ignore) {
+                broadcast(new IsIgnoredEvent(['status' => true , 'ignore_user_id' => $ignore_user_id, 'user_id' => $user_id ])) ;
+                return response()->json(['status' => true , 'ignore_user_id' => $ignore_user_id ], 200);
+            }
+        }
+    }
+    /**
+     * @param Request $request
+     */
+    public function unIgnoreUser (Request $request)
+    {
+        if($request->ajax()) {
+            $unignore_user_id = $request->unignore_user_id;
+            $user_id = Auth::user()->id;
+            ChatIgnore::where([ 'user_id' =>  $user_id, 'ignore_user_id' => $unignore_user_id ])->delete();
+            broadcast(new IsIgnoredEvent(['status' => false , 'ignore_user_id' => $unignore_user_id, 'user_id' => $user_id ])) ;
+            return response()->json(['status' => true , 'unignore_user_id' => $unignore_user_id ], 200);
         }
     }
 }

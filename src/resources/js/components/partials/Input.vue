@@ -2,7 +2,12 @@
     <div class="chat-input">
         <div class="chat-input_form">
             <input type="text" v-model.trim="message" @keydown="typing" placeholder="пишите здесь..." class="chat-input_form_input"  autofocus  autocomplete="off">
-            <div class="icon-send" @click="sendMessage" v-if="message"></div>
+            <div class="icon-send" @click.stop="sendMessage" v-if="message"></div>
+        </div>
+        <div class="chat-input_alert" v-if="alert" v-click-outside="closeAlert">
+            <p class="text">Вначале разблокируйте</p>
+            <p class="buttom" @click="unignore">разблокируйте</p>
+            <p class="cancell" @click="closeAlert">отмена</p>
         </div>
     </div>
 </template>
@@ -10,36 +15,48 @@
 <script>
     export default {
         name: "Input",
-        props: [ 'user', 'me', 'chatId'],
+        props: [ 'user', 'me', 'chatId', 'ignored'],
         data(){
             return {
                 message: null,
                 iconSend: 'scriptologia/chat/img/send.svg',
                 isTyping: false,
                 typingTimer: false,
+                alert: false
             }
         },
         methods: {
+            unignore() {
+                this.$emit('unignore')
+                this.closeAlert()
+            },
+            closeAlert(){
+                this.alert = false;
+            },
             typing (){
                 this.channel
                         .whisper('typing' , this.me)
             },
             sendMessage () {
-                let self = this
-                let data = {message: this.message, me: this.me, user: this.user, }
-                axios.post('/api/chat/send-message', data)
-                    .then(function (response) {
-                        // TODO очищать поле при положительном ответе с сервера
-                        self.message = ''
-                    })
-                    .catch(function (error) {
-                        console.log(error);
-                    })
+                if(this.ignored) {
+                    this.alert = true;
+                }
+                else {
+                    let self = this
+                    let data = {message: this.message, me: this.me, user: this.user, }
+                    axios.post('/api/chat/send-message', data)
+                        .then(function (response) {
+                            // TODO очищать поле при положительном ответе с сервера
+                            self.message = ''
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        })
+                }
             }
         },
         computed: {
             channel(){
-                // if(this.chatId && typeof(this.chatId) != "undefined") { return window.Echo.join('chat.'+ this.chatId ) }
                 if(this.user) { return window.Echo.join('chat.to-user-'+ this.user.id) }
             }
     },
@@ -63,6 +80,7 @@
     .chat {
         &-input {
             border-top: 1px solid #c1bfbf4a;
+            position: relative;
             &_form {
                 position: relative;
                 &_input {
@@ -94,6 +112,37 @@
                     background-color: #2196f3;
                     -webkit-mask-position: center;
                     mask-position: center;
+                }
+            }
+
+            &_alert {
+                background: #fff;
+                position: absolute;
+                top: 0;
+                transform: translateY(-100%);
+                left: 0;
+                right: 0;
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                padding: 1rem;
+                & > .text {
+                    margin: 0 1em;
+                    line-height: 150%;
+                    flex: 1 0 auto;
+                    font-size: 1.25rem;
+                }
+                & > .buttom {
+                    color: #58d30c;
+                    margin: 0 1em;
+                    cursor: pointer;
+                    line-height: 150%;
+                }
+                & > .cancell {
+                    color: #2196f3;
+                    margin: 0 1em;
+                    cursor: pointer;
+                    line-height: 150%;
                 }
             }
         }

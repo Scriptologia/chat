@@ -8,7 +8,7 @@ use Scriptologia\Chat\Models\ChatIgnore;
 
 //use Scriptologia\Chat\Models\ChatMessage;
 
-class ChatCollection extends JsonResource
+class UserCollection extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -18,14 +18,11 @@ class ChatCollection extends JsonResource
      */
     public function toArray($request)
     {
-        $user = $this->getRelation('user1') ?? $this->getRelation('user2');
         return [
             'id' => $this->id,
-            'messages' => $this->messages? $this->messages : [],
-            'user' => $user,
-            'countNew' => 0,
-            'active' => false,
-            'ignored' => ChatIgnore::where('user_id', auth()->user()->id)->where('ignore_user_id', $user->id)->first() ? true : false
+            'name' => $this->name,
+            'email' => $this->email,
+            'ignored' => ChatIgnore::where('user_id', auth()->user()->id)->where('ignore_user_id', $this->id)->first() ? true : false
         ];
     }
 

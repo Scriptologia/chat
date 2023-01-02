@@ -2,16 +2,22 @@
     <div class="chat">
     <div class="chat-message" ref="feed" :key="user.id">
         <template v-if="messages && messages.length && typeof(messages) != 'undefided' ">
-            <div class="chat-message_item" v-for="(message, index) in messages" :key="index"
+            <template v-for="(message, index) in messages">
+            <div class="chat-message_item"
+                 :key="index"
                  :class="[message.from === user.id ? 'from' : 'to']"
                  @click.stop="showOptions(message)"
-                 v-if="!message.trashed"
+                 v-if="!message.trashed && !(ignored && message.status === 'sended')"
             >
                 <span class="date">{{formatDate(message.date)}}</span>
                  <p class="message">{{message.message}} </p>
-                <div class="readed"><div class="icon" :class="{readed: message.readed}" v-if="message.from !== user.id"></div></div>
+                <div class="readed" v-if="message.from !== user.id">
+                    <i class="icon icon-sended" v-if="message.status === 'sended' "></i>
+                    <i class="icon icon-readed" :class="{readed: message.status === 'readed'}" v-else></i>
+                </div>
             </div>
-            <div v-else class="chat-message_item trashed" :class="[message.from === user.id ? 'from' : 'to']">сообщение удалено</div>
+            <div  v-if="message.trashed" class="chat-message_item trashed" :class="[message.from === user.id ? 'from' : 'to']">сообщение удалено</div>
+           </template>
         </template>
         <h5 v-else class="no-messages">Начните диалог</h5>
     </div>
@@ -31,7 +37,7 @@
 <script>
     export default {
         name: "Message",
-        props: ['messages', 'user', 'me', 'chatId'],
+        props: ['messages', 'user', 'me', 'chatId', 'ignored'],
         data() {
             return {
                 currentOptions: false,
@@ -52,7 +58,9 @@
                         console.log(error);
                     })
             },
-            reply () {},
+            reply () {
+                // TODO реализовать ответы на коменты
+            },
             showOptions (message = false) {
                 this.currentOptions = message;
             },
@@ -169,20 +177,32 @@
                     width: 15px;
                     height: 15px;
                     margin-left: auto;
-                    & > .icon {
+                    & .icon {
                         width: inherit;
                         height: inherit;
                         cursor: pointer;
-                        -webkit-mask: url('../../../img/double-check.svg');
-                        mask: url('../../../img/send.svg');
-                        -webkit-mask-size: contain;
-                        mask-size: contain;
-                        -webkit-mask-repeat: no-repeat;
-                        mask-repeat: no-repeat;
-                        background-color: #2196f3;
-                        -webkit-mask-position: center;
-                        mask-position: center;
-                        background: #000;
+                        display: block;
+                        background-color: grey;
+                        &.icon-readed {
+                            -webkit-mask: url('../../../img/double-check.svg');
+                            mask: url('../../../img/double-check.svg');
+                            -webkit-mask-size: contain;
+                            mask-size: contain;
+                            -webkit-mask-repeat: no-repeat;
+                            mask-repeat: no-repeat;
+                            -webkit-mask-position: center;
+                            mask-position: center;
+                        }
+                        &.icon-sended {
+                            -webkit-mask: url('../../../img/check.svg');
+                            mask: url('../../../img/double-check.svg');
+                            -webkit-mask-size: contain;
+                            mask-size: contain;
+                            -webkit-mask-repeat: no-repeat;
+                            mask-repeat: no-repeat;
+                            -webkit-mask-position: center;
+                            mask-position: center;
+                        }
                         &.readed {
                             background: #2196f3;
                         }
