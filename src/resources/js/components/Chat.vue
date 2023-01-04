@@ -89,7 +89,6 @@
                 this.isTyping = false
                 this.$refs.search.clearField()
                 if( this.user ) window.Echo.leave('chat.to-user-'+this.user.id );
-
                 this.messages = user.messages ? user.messages : [];
                 this.chatId = user.id
                 this.ignored = user.ignored
@@ -274,7 +273,7 @@
         }
         &-left {
             width: 250px;
-            flex: 0 0 250px;
+            flex: 0 0 auto;
             border-right: 1px solid #8f90914a;
             overflow-y: hidden;
             @media (max-width: 576px) {
@@ -284,6 +283,7 @@
         &-right {
             background: #fff;
             flex:1;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             @media (max-width: 576px) {

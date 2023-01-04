@@ -1,9 +1,9 @@
 <template>
     <div class="chat">
-    <div class="chat-message" ref="feed" :key="user.id">
-        <template v-if="messages && messages.length && typeof(messages) !== 'undefided' ">
-            <template v-for="(message, index) in messages">
-            <div class="chat-message_item"
+        <div class="chat-message" ref="feed" :key="user.id" @scroll="scrollButtonShow">
+             <template v-if="messages && messages.length && typeof(messages) !== 'undefided' ">
+            <div class="wraper-message" v-for="(message, index) in messages">
+               <div class="chat-message_item"
                  :key="index"
                  :class="[message.from === user.id ? 'from' : 'to']"
                  @click.stop="showOptions(message)"
@@ -16,14 +16,15 @@
                     <i class="icon icon-readed" :class="{readed: message.status === 'readed'}" v-else></i>
                 </div>
             </div>
-            <div  v-if="message.trashed" class="chat-message_item trashed" :class="[message.from === user.id ? 'from' : 'to']">сообщение удалено</div>
-           </template>
+               <div  v-if="message.trashed" class="chat-message_item trashed" :class="[message.from === user.id ? 'from' : 'to']">сообщение удалено</div>
+           </div>
         </template>
-        <h5 v-else class="no-messages">Начните диалог</h5>
-    </div>
-        <div class="options" v-if="currentOptions" v-click-outside="closeModal">
+             <h5 v-else class="no-messages">Начните диалог</h5>
+        </div>
+        <div class="options_wrapper" v-if="currentOptions">
+            <div class="options" v-click-outside="closeModal">
             <ul class="options_list">
-                <li class="options_item" @click="trash"><i class="options_icon icon icon-trash"></i>
+                <li class="options_item" @click="trash" v-if="me.id === currentOptions.from"><i class="options_icon icon icon-trash"></i>
                     <p class="options_item_method">удалить</p>
                 </li>
                 <li class="options_item" @click="reply"><i class="options_icon icon icon-reply"></i>
@@ -31,6 +32,8 @@
                 </li>
             </ul>
         </div>
+        </div>
+        <div class="scroll-top" @click="scrollToBottom" v-if="showScroll"><i class="icon icon-bottom"></i></div>
     </div>
 </template>
 
@@ -41,16 +44,19 @@
         data() {
             return {
                 currentOptions: false,
+                showScroll: false,
+                oldLength:0
             }
         },
         methods: {
             closeModal (){
-                console.log('fff', this.currentOptions)
                 this.currentOptions = false
+                document.querySelector(".wraper-message_selected").classList.remove("wraper-message_selected")
             },
             trash () {
                 let data  =  { chat_id: this.chatId, message: this.currentOptions}
                 this.currentOptions = false
+                document.querySelector(".wraper-message_selected").classList.remove("wraper-message_selected")
                 axios.post('/api/chat/trash-message', data)
                     .then(function (response) {
                     })
@@ -63,6 +69,7 @@
             },
             showOptions (message = false) {
                 this.currentOptions = message;
+                event.target.closest(".wraper-message").classList.add("wraper-message_selected")
             },
             scrollToBottom (){
                 let item = this.$refs.feed
@@ -102,15 +109,26 @@
 
                 // соединить компоненты в дату
                 return d.slice(0, 3).join('.') + ' ' + d.slice(3).join(':');
+            },
+            scrollButtonShow() {
+                if (this.$refs.feed) {
+                    if((this.$refs.feed.scrollHeight - this.$refs.feed.clientHeight - 100) > this.$refs.feed.scrollTop) {
+                        this.showScroll = true;
+                    }
+                    else {
+                        this.showScroll = false;
+                    }
+                }
             }
         },
         mounted (){
             this.scrollToBottom()
         },
         watch : {
-            messages () {
-                this.scrollToBottom()
-            }
+            messages(newVal) {
+                if(this.oldLength !== newVal.length) this.scrollToBottom();
+                this.oldLength = newVal.length
+            },
         }
     }
 </script>
@@ -121,6 +139,7 @@
         position: relative;
         width: 100%;
         height: 100%;
+        overflow: hidden;
         &-message {
             background: rgb(190 222 170);
             width: 100%;
@@ -219,6 +238,34 @@
                 color: #fff;
             }
         }
+        & > .scroll-top {
+            position: absolute;
+            bottom: 1rem;
+            right:1rem;
+            width:3rem;
+            height:3rem;
+            background-color: #fff;
+            border-radius: 50%;
+            justify-content: center;
+            align-items: center;
+            display: flex;
+            & > .icon {
+                &-bottom {
+                    width: inherit;
+                    height: inherit;
+                    margin-top: 0.3rem;
+                    display: block;
+                    -webkit-mask: url('../../../img/arrow-bottom.svg');
+                    -webkit-mask-size: contain;
+                    mask-size: contain;
+                    -webkit-mask-repeat: no-repeat;
+                    mask-repeat: no-repeat;
+                    background-color: #2196f3;
+                    -webkit-mask-position: center;
+                    mask-position: center;
+                }
+            }
+        }
     }
     .options {
         width: min-content;
@@ -270,6 +317,21 @@
                     -webkit-mask: url('../../../img/trash.svg');
                 }
             }
+        }
+
+        &_wrapper {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+    }
+    .wraper-message {
+        &_selected {
+            background:#f9f9f963;
         }
     }
 </style>

@@ -1,7 +1,7 @@
 <template>
     <div class="chat-input">
         <div class="chat-input_form">
-            <input type="text" v-model.trim="message" @keydown="typing" placeholder="пишите здесь..." class="chat-input_form_input"  autofocus  autocomplete="off">
+            <textarea ref="text" type="text" v-model.trim="message" @keydown="typing" placeholder="пишите здесь..." class="chat-input_form_input"  autofocus  autocomplete="off"></textarea>
             <div class="icon-send" @click.stop="sendMessage" v-if="message"></div>
         </div>
         <div class="chat-input_alert" v-if="alert" v-click-outside="closeAlert">
@@ -22,7 +22,7 @@
                 iconSend: 'scriptologia/chat/img/send.svg',
                 isTyping: false,
                 typingTimer: false,
-                alert: false
+                alert: false,
             }
         },
         methods: {
@@ -33,8 +33,12 @@
             closeAlert(){
                 this.alert = false;
             },
-            typing (){console.log(this.channel)
+            typing (){
                 if (this.channel ) this.channel.whisper('typing' , this.me) ;
+
+                let oField = this.$refs.text
+                let scrollH = oField.scrollHeight > oField.clientHeight ? oField.scrollHeight-10 : oField.clientHeight -10;
+                oField.style.height = scrollH+'px';
             },
             sendMessage () {
                 if(this.ignored) {
@@ -45,8 +49,8 @@
                     let data = {message: this.message, me: this.me, user: this.user, }
                     axios.post('/api/chat/send-message', data)
                         .then(function (response) {
-                            // TODO очищать поле при положительном ответе с сервера
                             self.message = ''
+                            self.$refs.text.removeAttribute('style')
                         })
                         .catch(function (error) {
                             console.log(error);
@@ -85,7 +89,9 @@
                 &_input {
                     outline: none;
                     width: 100%;
-                    height: 100%;
+                    min-height: 29px;
+                    height: 29px;
+                    max-height: 100px;
                     border:none;
                     padding: 5px 30px 5px 5px;
                     font-size: 16px;
@@ -93,6 +99,7 @@
                     background: #fff;
                     position: relative;
                     box-sizing: border-box;
+                    overflow: hidden;
                 }
                 & .icon-send {
                     right: 0;
