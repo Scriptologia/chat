@@ -164,7 +164,7 @@ class ChatController extends Controller
             if($messages){
                $makeReaded =  function ($it) use($me_id, $message, $user)
                 {
-                    if ( $it->from === $user['id'] && $it->date === $message['date']) $it->status = 'delivered';
+                    if ( $it->from === $user['id'] && $it->status === 'sended' && (!$message || $it->date === $message['date']) ) $it->status = 'delivered';
                     return $it;
                 };
                 $messages_delivered = array_map($makeReaded, $messages->messages);
@@ -174,7 +174,7 @@ class ChatController extends Controller
             }
 
 //            $user_id = $messages->user1_id === $me_id ? $messages->user2_id : $messages->user1_id ;
-            broadcast( new DeliveredMessageEvent(['chat_id' => $chat_id, 'from' => $user['id'], 'date' => $message['date'] ]) );
+            broadcast( new DeliveredMessageEvent(['chat_id' => $chat_id, 'from' => $user['id'], 'date' => $message? $message['date'] : $message  ]) );
         }
     }
 

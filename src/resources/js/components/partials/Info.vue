@@ -11,7 +11,8 @@
         </div>
             <div class="menu-user">
                 <i class="menu-user_icon icon-menu icon" @click.stop="menu = !menu"></i>
-                <div class="menu-user_block" :style="[ menu? {'display':'block'} : {'display':'none'}]"  v-click-outside="closeMenu">
+                <transition name="from-up">
+                     <div class="menu-user_block" v-if="menu"  v-click-outside="closeMenu">
                     <ul class="menu-user_list">
                         <li class="menu-user_item" @click="deleteChat"><i class="menu-user_item_icon icon-delete icon"></i><p class="menu-user_item_text">удалить канал</p></li>
                         <li class="menu-user_item" @click="ignoreUser" v-if="!ignored"><i class="menu-user_item_icon icon-ignore icon"></i><p class="menu-user_item_text">игнорировать</p></li>
@@ -19,6 +20,7 @@
                         <li class="menu-user_item"><i class="menu-user_item_icon icon-delete icon"></i><p class="menu-user_item_text">удалить канал</p></li>
                     </ul>
                 </div>
+                </transition>
             </div>
         </template>
     </div>
@@ -231,5 +233,18 @@
             }
             }
     }
-
+    /*annimation*/
+.from-up {
+    &-enter, &-leave-to {
+        opacity: 0;
+        transform: translate(0, 0) !important;
+    }
+    &-enter-to, &-leave {
+        opacity: 1;
+        transform: translate(0, 100%) !important;
+    }
+    &-enter-active, &-leave-active {
+        transition: all .5s;
+    }
+}
 </style>

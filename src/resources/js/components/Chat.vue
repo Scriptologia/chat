@@ -145,7 +145,7 @@
                                 return it;
                             })
                         })
-                        .listen('.Scriptologia\\Chat\\Events\\SendMessageEvent', (data) => {
+                        .listen('.Scriptologia\\Chat\\Events\\SendMessageEvent', (data) => {console.log(data)
                             if( data.user.id !== self.me.id )  self.deliveredMessage(data);
 
                             let index ;
@@ -161,18 +161,27 @@
                                 })
                             }
 
-                                if( index >= 0) {
-                                    let item = self.myUsers[index];
-                                    item.messages.push(data.message)
-                                    item.id = data.chat_id
+                            if (index >= 0) {
+                                let item = self.myUsers[index];
+                                item.messages.push(data.message)
+                                // self.messages.push(data.message)
+                                item.id = data.chat_id
 
-                                    if( data.user.id !== self.me.id && ( !self.user || self.user.id !== data.user.id ) ) { item.countNew ? item.countNew++ : item.countNew = 1; }
-                                    if (data.user.id !== self.me.id && self.user.id === data.user.id) self.readedSend();
+                                if (data.user.id !== self.me.id && (!self.user || self.user.id !== data.user.id)) {
+                                    item.countNew ? item.countNew++ : item.countNew = 1;
                                 }
-                                else {
-                                    let newObj = { user: data.user, messages : [data.message], id: data.chat_id, active: false, countNew: 1}
-                                    self.myUsers.unshift( newObj )
+                                if (data.user.id !== self.me.id && self.user && self.user.id === data.user.id) self.readedSend();
+                            }
+                            else {
+                                let newObj = {
+                                    user: data.user,
+                                    messages: [data.message],
+                                    id: data.chat_id,
+                                    active: false,
+                                    countNew: 1
                                 }
+                                self.myUsers.unshift(newObj)
+                            }
 
                             self.clear()
                         })
@@ -218,7 +227,7 @@
                             self.myUsers = self.myUsers.map( it => {
                                 if(it.id === data.chat_id )  {
                                     it.messages = it.messages.map( item => {
-                                        if( item.from === data.from && data.date === item.date) item.status = 'delivered';
+                                        if( item.from === data.from && (!data.date || data.date === item.date) &&  item.status === 'sended') item.status = 'delivered';
                                         return item;
                                     });
                                     if(self.user && data.from === self.user.id) {self.messages = it.messages ; self.chatId = data.chat_id ;}
@@ -238,11 +247,11 @@
             axios.get('/api/chat/contacts')
                 .then(function (response) {
                     self.users = response.data.map( it => {
-                        let sum = 0
-                        for (let i = 0; i < it.length ; i++) {
-                            if(it.from !== self.me.id && !id.status === 'readed') sum++;
-                        }
-                        it.countNew = sum
+                        let data = {chat_id: it.id, user: it.user, message: false}
+                        if( it.user.id !== self.me.id )  self.deliveredMessage(data);
+
+                        let sum = it.messages.reduce( (sum, item) => item.from !== self.me.id && item.status !== 'readed' ? sum+1 : sum  , 0);
+                        it.countNew = sum;
                         return it;
                     })
                     self.myUsers = self.users
@@ -300,6 +309,8 @@
             }
         }
     }
-
-
+/*animation*/
+* {
+    transition: all .5s;
+}
 </style>
