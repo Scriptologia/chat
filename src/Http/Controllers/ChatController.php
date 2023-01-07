@@ -88,8 +88,11 @@ class ChatController extends Controller
             $me = $request->me;
             $user = $request->user;
             $message = $request->message;
+            $reply = $request->reply;
+            $reply ? $reply['message'] = mb_substr($reply['message'], 0, 50). '...' : false;
             $message = [
                 'message' => $message,
+                'reply' => $reply,
                 'from' => $me['id'],
                 'to' => $user['id'],
                 'date' => now(),
@@ -146,6 +149,7 @@ class ChatController extends Controller
             broadcast( new ReadedMessageEvent(['chat_id' => $chat_id, 'to' => $user_id, 'readed_user_id' => $me_id ]) );
         }
     }
+
     /**
      * @param Request $request
      */

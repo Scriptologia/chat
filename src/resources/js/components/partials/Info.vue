@@ -239,10 +239,10 @@
         opacity: 0;
         transform: translate(0, 0) !important;
     }
-    &-enter-to, &-leave {
-        opacity: 1;
-        transform: translate(0, 100%) !important;
-    }
+    /*&-enter-to, &-leave {*/
+        /*opacity: 1;*/
+        /*!*transform: translate(0, 100%) !important;*!*/
+    /*}*/
     &-enter-active, &-leave-active {
         transition: all .5s;
     }

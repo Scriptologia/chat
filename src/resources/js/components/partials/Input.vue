@@ -1,8 +1,9 @@
 <template>
     <div class="chat-input">
         <div class="chat-input_form">
+            <div class="chat-input_form_reply" v-if="reply">{{reply.message}} <i class="icon-delete" @click="deleteReply"></i></div>
             <textarea ref="text" type="text" v-model.trim="message" @keydown="typing" placeholder="пишите здесь..." class="chat-input_form_input"  autofocus  autocomplete="off"></textarea>
-            <div class="icon-send" @click.stop="sendMessage" v-if="message"></div>
+           <div class="icon-send" @click.stop="sendMessage" v-if="message"></div>
         </div>
         <div class="chat-input_alert" v-if="alert" v-click-outside="closeAlert">
             <p class="text">Вначале разблокируйте</p>
@@ -23,22 +24,30 @@
                 isTyping: false,
                 typingTimer: false,
                 alert: false,
+                reply: false
             }
         },
         methods: {
+            deleteReply () {
+                this.reply = false
+            },
+            setReply ( data) {
+                this.reply = data
+            },
             unignore() {
                 this.$emit('unignore')
                 this.closeAlert()
             },
-            closeAlert(){
+            closeAlert() {
                 this.alert = false;
             },
-            typing (){
+            typing () {
                 if (this.channel ) this.channel.whisper('typing' , this.me) ;
 
                 let oField = this.$refs.text
+                oField.style.height = 0
                 let scrollH = oField.scrollHeight > oField.clientHeight ? oField.scrollHeight-10 : oField.clientHeight -10;
-                oField.style.height = scrollH+'px';
+                oField.style.height = scrollH+'px';console.log(scrollH)
             },
             sendMessage () {
                 if(this.ignored) {
@@ -46,11 +55,12 @@
                 }
                 else {
                     let self = this
-                    let data = {message: this.message, me: this.me, user: this.user, }
+                    let data = {message: this.message, me: this.me, user: this.user, reply: this.reply? this.reply : false}
                     axios.post('/api/chat/send-message', data)
                         .then(function (response) {
                             self.message = ''
                             self.$refs.text.removeAttribute('style')
+                            self.reply = false
                         })
                         .catch(function (error) {
                             console.log(error);
@@ -65,7 +75,7 @@
     },
         mounted () {
             this.message = null
-            if(this.me) window.Echo.join('chat.to-user-'+ this.me.id)
+            if (this.me) window.Echo.join('chat.to-user-' + this.me.id)
                 .listenForWhisper('typing', (e) => {
                     this.isTyping = e
                     this.$emit('typing', e)
@@ -74,7 +84,11 @@
                         this.isTyping = false
                         this.$emit('typing', this.isTyping)
                     }, 2000)
-                }) ;
+                });
+
+            this.$root.$on('reply', data => {
+                this.reply = data
+            });
         }
     }
 </script>
@@ -86,6 +100,32 @@
             position: relative;
             &_form {
                 position: relative;
+                &_reply {
+                    background: #f8f4ec;
+                    border-left: 2px solid #b17d36;
+                    margin: 3px;
+                    padding: 3px;
+                    & .icon-delete {
+                        width: 1rem;
+                        height: 1rem;
+                        display: block;
+                        position: absolute;
+                        right: 0;
+                        top: 0;
+                        -webkit-mask: url('../../../img/delete.svg');
+                        -webkit-mask-size: contain;
+                        mask-size: contain;
+                        -webkit-mask-repeat: no-repeat;
+                        mask-repeat: no-repeat;
+                        -webkit-mask-position: center;
+                        mask-position: center;
+                        background-color: red;
+                        cursor: pointer;
+                        &:hover {
+                            transform: rotateZ(90deg);
+                        }
+                    }
+                    }
                 &_input {
                     outline: none;
                     width: 100%;
@@ -108,7 +148,7 @@
                     transform: translateY(-50%);
                     cursor: pointer;
                     width: 30px;
-                    height: 100%;
+                    height: 30px;
                     -webkit-mask: url('../../../img/send.svg');
                     mask: url('../../../img/send.svg');
                     -webkit-mask-size: contain;

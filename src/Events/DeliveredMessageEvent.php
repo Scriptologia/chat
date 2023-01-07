@@ -18,7 +18,7 @@ class DeliveredMessageEvent implements ShouldBroadcast
     /**
      * Create a new event instance.
      *
-     * @return void
+     * @return void-
      */
     public function __construct($data)
     {

@@ -1,13 +1,13 @@
 <template>
     <div class="chat-container">
-        <div class="chat-left">
+        <div class="chat-left" :class="{ open: toMessageShow }">
             <Search @getUsers="insertUsers" @clear="clear" ref="search"></Search>
             <ContactsList :users="users" @selectedUser="toMessage" :userActive="user" :isTyping="isTyping"  ></ContactsList>
         </div>
         <div class="chat-right" :class="{ open: toMessageShow }">
             <Info :user="user" @toUserList="toMessageShow = false" :isTyping="isTyping" v-if="user" :key=" 'user' + user.id" :chatId="chatId" @deleteChat="deleteChat" :ignored="ignored" @ignored="ignoredStatus" ref="info"></Info>
             <Message v-if="user" :messages="messages" :me="me" :user="user" :key=" 'messages' + chatId" :chatId="chatId" :ignored="ignored"></Message>
-            <Input v-if="user" :me="me" :user="user" @typing="getTyping" :chatId="chatId" :key=" 'input' + chatId" :ignored="ignored" @unignore="$refs.info.unIgnore()"></Input>
+            <Input v-if="user" :me="me" :user="user" @typing="getTyping" :chatId="chatId" :key=" 'input' + chatId" :ignored="ignored" @unignore="$refs.info.unIgnore()" ref="input"></Input>
         </div>
     </div>
 </template>
@@ -33,7 +33,7 @@
                 toMessageShow : false,
                 isTyping: false,
                 searchClear: '',
-                ignored : false
+                ignored : false,
             }
         },
         methods: {
@@ -269,16 +269,15 @@
         &-container {
             height: 80vh;
             width:100%;
-           display: flex;
+            display: flex;
             border: 1px solid #dedfdf;
-            /*justify-content: center;*/
             background: #fff;
             position: relative;
-            /*overflow: hidden;*/
-            @media (max-width: 576px) {
-                display: block;
-                width: 100%;
-            }
+            overflow: hidden;
+            /*@media (max-width: 576px) {*/
+                /*!*display: block;*!*/
+                /*width: 100%;*/
+            /*}*/
         }
         &-left {
             width: 250px;
@@ -286,25 +285,28 @@
             border-right: 1px solid #8f90914a;
             overflow-y: hidden;
             @media (max-width: 576px) {
-                width: 100%;
+                transform: translateX(0%);
+                width: 100% !important;
+                flex: 1 0 100%;
+                &.open {
+                 flex: 0 1 100%;
+                transform: translateX(-100%);
+            }
             }
         }
         &-right {
             background: #fff;
-            flex:1;
+            flex:1 0 auto;
             overflow: hidden;
             display: flex;
             flex-direction: column;
             @media (max-width: 576px) {
                 transform: translateX(100%);
+                width: 100%;
+                flex: 0 1 100%;
                 &.open {
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    bottom: 0;
-                    z-index: 10;
+                    flex: 1 0 100%;
                     transform: translateX(0%);
-                    width: 100%;
                 }
             }
         }

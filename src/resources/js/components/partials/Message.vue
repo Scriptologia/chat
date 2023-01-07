@@ -2,7 +2,7 @@
     <div class="chat">
         <div class="chat-message" ref="feed" :key="user.id" @scroll="scrollButtonShow">
              <template v-if="messages && messages.length && typeof(messages) !== 'undefided' ">
-            <div class="wraper-message" v-for="(message, index) in messages">
+            <div class="wraper-message" v-for="(message, index) in messages" :id="message.date">
                <div class="chat-message_item"
                  :key="index"
                  :class="[message.from === user.id ? 'from' : 'to']"
@@ -10,6 +10,9 @@
                  v-if="!message.trashed && !(ignored && message.status === 'sended')"
             >
                 <span class="date">{{formatDate(message.date)}}</span>
+                 <div class="reply" v-if="message.reply">
+                     <a :href="'#'+message.reply.date">{{message.reply.message}}</a>
+                 </div>
                  <p class="message">{{message.message}} </p>
                 <div class="readed" v-if="message.from !== user.id">
                     <i class="icon icon-sended" v-if="message.status === 'sended' "></i>
@@ -65,7 +68,8 @@
                     })
             },
             reply () {
-                // TODO реализовать ответы на коменты
+                this.$root.$emit('reply', this.currentOptions)
+                this.closeModal()
             },
             showOptions (message = false) {
                 this.currentOptions = message;
@@ -74,7 +78,11 @@
             scrollToBottom (){
                 let item = this.$refs.feed
                 setTimeout( () => {
-                    item.scrollTop = item.scrollHeight - item.clientHeight;
+                    // item.scrollTop = item.scrollHeight - item.clientHeight;
+                item.scrollBy({
+                        top: item.scrollHeight - item.clientHeight,
+                        behavior: 'smooth'
+                    });
                 } , 100);
             },
             formatDate(date0) {
@@ -123,7 +131,21 @@
         },
         mounted (){
             this.scrollToBottom()
-        },
+
+            const smoothLinks = document.querySelectorAll('a[href^="#"]');
+            for (let smoothLink of smoothLinks) {
+                smoothLink.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation()
+                    let id = smoothLink.getAttribute('href');
+
+                    document.getElementById(id.replace('#', '')).scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                });
+            };
+            },
         watch : {
             messages(newVal) {
                 if(this.oldLength !== newVal.length) this.scrollToBottom();
@@ -230,6 +252,12 @@
                 &.trashed {
                     background: #dfe0e0;
                     &:before { content: none;}
+                }
+                & .reply {
+                    background: #f8f4ec;
+                    border-left: 2px solid #b17d36;
+                    margin: 0.5rem 0.1rem;
+                    padding: 3px;
                 }
             }
             & > .no-messages {
